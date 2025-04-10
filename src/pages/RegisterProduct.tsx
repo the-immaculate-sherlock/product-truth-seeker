@@ -20,6 +20,7 @@ import {
 } from '../components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 // Form schema using zod
 const formSchema = z.object({
@@ -56,6 +57,7 @@ const RegisterProduct = () => {
 
   const onSubmit = async (data: FormValues) => {
     if (!isConnected) {
+      toast.info('Connecting to wallet...');
       const connected = await connectWallet();
       if (!connected) {
         toast.error('Please connect your MetaMask wallet to register a product');
@@ -64,6 +66,7 @@ const RegisterProduct = () => {
     }
 
     setIsRegistering(true);
+    toast.info('Registering product on blockchain. Please confirm the transaction in MetaMask...');
 
     try {
       const result = await registerProduct(
@@ -192,14 +195,21 @@ const RegisterProduct = () => {
                         <Button 
                           type="submit" 
                           className="w-full bg-blockchain-primary hover:bg-blockchain-secondary"
-                          disabled={isRegistering || !isConnected}
+                          disabled={isRegistering}
                         >
-                          {isRegistering ? 'Registering...' : 'Register Product'}
+                          {isRegistering ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                              Registering...
+                            </>
+                          ) : (
+                            'Register Product'
+                          )}
                         </Button>
                         
-                        {!isConnected && (
-                          <p className="mt-2 text-sm text-center text-red-500">
-                            Please connect your wallet to register a product
+                        {!isConnected && !isRegistering && (
+                          <p className="mt-2 text-sm text-center text-amber-600">
+                            You will be prompted to connect your wallet when registering
                           </p>
                         )}
                       </div>

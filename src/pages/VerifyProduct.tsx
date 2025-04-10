@@ -1,15 +1,13 @@
-
 import { useState } from 'react';
 import { useBlockchain } from '../contexts/BlockchainContext';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import QRCodeScanner from '../components/QRCodeScanner';
-import AuthenticationBadge from '../components/AuthenticationBadge';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { Separator } from '../components/ui/separator';
+import { Input } from '../components/ui/input';
+import AuthenticationBadge from '../components/AuthenticationBadge';
+import { ScanLog } from '../services/blockchainService';
 import { toast } from 'sonner';
-import { Calendar, MapPin, Package2, FileText, User, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ScanResult {
   hash: string;
@@ -29,15 +27,13 @@ const VerifyProduct = () => {
   const [userType, setUserType] = useState<'Consumer' | 'Distributor' | 'Retailer'>('Consumer');
   const [location, setLocation] = useState('');
 
-  const handleScanSuccess = async (data: string) => {
+  const handleScanComplete = async (data: string) => {
     try {
-      // Try to parse the QR code content
       let parsedData: ScanResult;
       
       try {
         parsedData = JSON.parse(data);
       } catch (e) {
-        // If not JSON, assume it's a direct hash
         parsedData = { hash: data };
       }
       
@@ -49,7 +45,6 @@ const VerifyProduct = () => {
       setScanResult(parsedData);
       setShowScanner(false);
       
-      // Verify the product on the blockchain
       await verifyProductOnChain(parsedData.hash);
       
     } catch (error) {
@@ -69,13 +64,11 @@ const VerifyProduct = () => {
         setVerificationStatus('verified');
         setProductDetails(result.product);
         
-        // Get scan logs
         const logsResult = await getScanLogs(hash);
         if (logsResult.success && logsResult.logs) {
           setScanLogs(logsResult.logs);
         }
         
-        // Try to get user's current location
         try {
           navigator.geolocation.getCurrentPosition((position) => {
             setLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
@@ -106,7 +99,6 @@ const VerifyProduct = () => {
       if (result.success) {
         toast.success(`Scan logged as ${userType}`);
         
-        // Refresh scan logs
         const logsResult = await getScanLogs(scanResult.hash);
         if (logsResult.success && logsResult.logs) {
           setScanLogs(logsResult.logs);
@@ -132,7 +124,6 @@ const VerifyProduct = () => {
     setShowScanner(true);
   };
 
-  // Fix for the TypeScript error by creating a properly typed input handler
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(e.target.value);
   };
@@ -155,7 +146,7 @@ const VerifyProduct = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-center">
-                  <QRCodeScanner onScanSuccess={handleScanSuccess} />
+                  <QRCodeScanner onScanSuccess={handleScanComplete} />
                 </CardContent>
               </Card>
             ) : (

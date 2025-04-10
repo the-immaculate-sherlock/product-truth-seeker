@@ -1,4 +1,3 @@
-
 import { ethers } from 'ethers';
 import { toast } from 'sonner';
 
@@ -13,9 +12,9 @@ const CONTRACT_ABI = [
   "function getScanLog(bytes32 _productHash, uint256 _index) public view returns (address scanner, string location, string userType, uint256 timestamp)"
 ];
 
-// This would be the deployed contract address
-// For development, we'll use a placeholder
-const CONTRACT_ADDRESS = "0x123456789AbCDEf123456789AbCDEf123456789A"; // Replace with actual deployed address
+// For development, we're using a placeholder address
+// When deploying to a real network, replace this with the actual deployed contract address
+const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Updated to a common hardhat local deployment address
 
 export interface Product {
   name: string;
@@ -56,6 +55,11 @@ class BlockchainService {
       
       const address = await this.signer.getAddress();
       toast.success(`Connected wallet: ${address.substring(0, 6)}...${address.substring(address.length - 4)}`);
+      
+      // Log network information for debugging
+      const network = await this.provider.getNetwork();
+      console.log("Connected to network:", network.name, "Chain ID:", network.chainId);
+      
       return true;
     } catch (error) {
       console.error('Error connecting to MetaMask:', error);
@@ -72,38 +76,68 @@ class BlockchainService {
     additionalDetails: string
   ): Promise<{ success: boolean; hash?: string; error?: string }> {
     if (!this.isConnected || !this.contract) {
-      await this.connectWallet();
-      if (!this.isConnected) {
+      const connected = await this.connectWallet();
+      if (!connected) {
         return { success: false, error: 'Wallet not connected' };
       }
     }
 
     try {
+      console.log("Registering product:", { name, manufacturingDate, batchNumber, location });
+      
       // Create a unique hash for the product based on its data
       const productData = ethers.concat([
         ethers.toUtf8Bytes(name),
         ethers.toUtf8Bytes(manufacturingDate), 
         ethers.toUtf8Bytes(batchNumber),
         ethers.toUtf8Bytes(location),
-        ethers.toUtf8Bytes(additionalDetails)
+        ethers.toUtf8Bytes(additionalDetails || '')
       ]);
       
       const productHash = ethers.keccak256(productData);
+      console.log("Generated product hash:", productHash);
       
+      // Check if the contract instance exists
+      if (!this.contract) {
+        console.error("Contract instance is null");
+        return { success: false, error: 'Contract not initialized' };
+      }
+      
+      console.log("Calling contract.registerProduct with hash:", productHash);
+      
+      // Add gas limit to avoid transaction underpricing issues
       const tx = await this.contract.registerProduct(
         name,
         manufacturingDate,
         batchNumber,
         location,
-        additionalDetails,
-        productHash
+        additionalDetails || '',
+        productHash,
+        { gasLimit: 500000 } // Explicitly set a gas limit
       );
       
-      await tx.wait();
+      console.log("Transaction initiated:", tx.hash);
+      
+      // Wait for the transaction to be mined
+      const receipt = await tx.wait();
+      console.log("Transaction receipt:", receipt);
+      
       return { success: true, hash: productHash };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering product:', error);
-      return { success: false, error: 'Failed to register product on blockchain' };
+      let errorMessage = 'Failed to register product on blockchain';
+      
+      // Extract more specific error message if available
+      if (error.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      // Check for MetaMask rejection
+      if (error.code === 4001) {
+        errorMessage = 'Transaction was rejected by user';
+      }
+      
+      return { success: false, error: errorMessage };
     }
   }
 
