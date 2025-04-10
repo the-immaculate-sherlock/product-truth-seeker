@@ -1,3 +1,4 @@
+
 import { ethers } from 'ethers';
 import { toast } from 'sonner';
 
@@ -12,9 +13,16 @@ const CONTRACT_ABI = [
   "function getScanLog(bytes32 _productHash, uint256 _index) public view returns (address scanner, string location, string userType, uint256 timestamp)"
 ];
 
-// For development, we're using a placeholder address
-// When deploying to a real network, replace this with the actual deployed contract address
-const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Updated to a common hardhat local deployment address
+// Local Hardhat node contract address
+// This should be updated with the actual deployed contract address from Hardhat
+const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Default Hardhat first deployment address
+
+// Hardhat network configuration
+const HARDHAT_NETWORK = {
+  chainId: 31337, // Hardhat default chain ID
+  name: 'Hardhat Local',
+  rpcUrl: 'http://127.0.0.1:8545',
+};
 
 export interface Product {
   name: string;
@@ -48,6 +56,44 @@ class BlockchainService {
 
     try {
       this.provider = new ethers.BrowserProvider(window.ethereum);
+      
+      // Request network switch to Hardhat local
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: `0x${HARDHAT_NETWORK.chainId.toString(16)}` }],
+        });
+      } catch (switchError: any) {
+        // If the network doesn't exist in MetaMask, add it
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: `0x${HARDHAT_NETWORK.chainId.toString(16)}`,
+                  chainName: HARDHAT_NETWORK.name,
+                  rpcUrls: [HARDHAT_NETWORK.rpcUrl],
+                  nativeCurrency: {
+                    name: 'Ethereum',
+                    symbol: 'ETH',
+                    decimals: 18,
+                  },
+                },
+              ],
+            });
+          } catch (addError) {
+            console.error('Error adding Hardhat network to MetaMask:', addError);
+            toast.error('Failed to add Hardhat network to MetaMask. Please add it manually.');
+            return false;
+          }
+        } else {
+          console.error('Error switching to Hardhat network:', switchError);
+          toast.error('Failed to switch to Hardhat network. Make sure your local node is running.');
+          return false;
+        }
+      }
+      
       await this.provider.send('eth_requestAccounts', []);
       this.signer = await this.provider.getSigner();
       this.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, this.signer);
@@ -63,7 +109,7 @@ class BlockchainService {
       return true;
     } catch (error) {
       console.error('Error connecting to MetaMask:', error);
-      toast.error('Failed to connect to MetaMask. Please try again.');
+      toast.error('Failed to connect to MetaMask. Please make sure your Hardhat local node is running at http://127.0.0.1:8545.');
       return false;
     }
   }

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useBlockchain } from '../contexts/BlockchainContext';
 import Navbar from '../components/layout/Navbar';
@@ -8,6 +9,24 @@ import { Input } from '../components/ui/input';
 import AuthenticationBadge from '../components/AuthenticationBadge';
 import { ScanLog } from '../services/blockchainService';
 import { toast } from 'sonner';
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent,
+  CardFooter
+} from '../components/ui/card';
+import { 
+  Loader2, 
+  AlertTriangle, 
+  Package2, 
+  Calendar, 
+  MapPin, 
+  FileText, 
+  User 
+} from 'lucide-react';
+import { Separator } from '../components/ui/separator';
 
 interface ScanResult {
   hash: string;
