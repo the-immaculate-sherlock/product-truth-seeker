@@ -13,9 +13,9 @@ async function main() {
   const productVerification = await ProductVerification.deploy();
 
   // Wait for deployment to finish
-  await productVerification.deployed();
+  await productVerification.waitForDeployment();
 
-  console.log(`ProductVerification contract deployed to: ${productVerification.address}`);
+  console.log(`ProductVerification contract deployed to: ${productVerification.target}`);
   console.log("Copy this address and update it in src/services/blockchainService.ts");
 }
 

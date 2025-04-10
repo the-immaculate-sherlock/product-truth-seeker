@@ -5,17 +5,346 @@ import { toast } from 'sonner';
 // This would be replaced with the actual ABI after compilation
 // For now, we'll use a simplified ABI based on our contract
 const CONTRACT_ABI = [
-  "function registerProduct(string _name, string _manufacturingDate, string _batchNumber, string _location, string _additionalDetails, bytes32 _productHash) public",
-  "function getProduct(bytes32 _productHash) public view returns (string name, string manufacturingDate, string batchNumber, string location, string additionalDetails, address manufacturer, uint256 timestamp, bool isRegistered)",
-  "function verifyProduct(bytes32 _productHash) public view returns (bool)",
-  "function logScan(bytes32 _productHash, string _location, string _userType) public",
-  "function getScanLogsCount(bytes32 _productHash) public view returns (uint256)",
-  "function getScanLog(bytes32 _productHash, uint256 _index) public view returns (address scanner, string location, string userType, uint256 timestamp)"
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "productHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "manufacturer",
+        "type": "address"
+      }
+    ],
+    "name": "ProductRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "productHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "scanner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "userType",
+        "type": "string"
+      }
+    ],
+    "name": "ProductScanned",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_productHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getProduct",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "manufacturingDate",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "batchNumber",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "additionalDetails",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "manufacturer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRegistered",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_productHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getScanLog",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "scanner",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "userType",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_productHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getScanLogsCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_productHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "_location",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_userType",
+        "type": "string"
+      }
+    ],
+    "name": "logScan",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "products",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "manufacturingDate",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "batchNumber",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "additionalDetails",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "manufacturer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRegistered",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_manufacturingDate",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_batchNumber",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_location",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_additionalDetails",
+        "type": "string"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_productHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "registerProduct",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "scanLogs",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "scanner",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "userType",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_productHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyProduct",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
 ];
 
 // Local Hardhat node contract address
 // This should be updated with the actual deployed contract address from Hardhat
-const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Default Hardhat first deployment address
+const CONTRACT_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"; // Default Hardhat first deployment address
 
 // Hardhat network configuration
 const HARDHAT_NETWORK = {
