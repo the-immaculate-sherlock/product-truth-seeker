@@ -132,6 +132,11 @@ const VerifyProduct = () => {
     setShowScanner(true);
   };
 
+  // Fix for the TypeScript error by creating a properly typed input handler
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocation(e.target.value);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -297,7 +302,7 @@ const VerifyProduct = () => {
                                 <label className="block text-sm font-medium mb-2">Current Location:</label>
                                 <Input
                                   value={location}
-                                  onChange={(e) => setLocation(e.target.value)}
+                                  onChange={handleLocationChange}
                                   placeholder="Enter your current location"
                                   className="w-full"
                                 />
@@ -349,14 +354,5 @@ const VerifyProduct = () => {
     </div>
   );
 };
-
-function Input({ className, ...props }: React.HTMLProps<HTMLInputElement> & { className?: string }) {
-  return (
-    <input
-      className={`border border-gray-300 rounded-md px-3 py-2 ${className}`}
-      {...props}
-    />
-  );
-}
 
 export default VerifyProduct;
